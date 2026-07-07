@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tahoe Summer Guide</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 54 54" role="img">
+            <path d="M14 43V24" />
+            <path d="M7 34h14L14 24 8 31h12l-6-9" />
+            <path d="M31 43V17" />
+            <path d="M22 35h18l-9-13-8 10h16l-8-15" />
+            <path d="M40 43V28" />
+            <path d="M34 37h12l-6-9-5 7h10l-5-10" />
+            <path d="M8 45c8 3 27 3 39 0" />
+          </svg>
+        </div>
+        <div class="title-block">
+          <h1>
+            <span>Tahoe</span>
+            <span class="summer-word">Summer</span>
+            <span>Guide</span>
+          </h1>
+          <p class="subtitle">Tahoe City / North Lake Tahoe</p>
+          <p class="date-context" id="dateContext">July 2026</p>
+        </div>
+        <button class="search-button" type="button" aria-label="Search events">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="m15.5 15.5 4.5 4.5" />
+          </svg>
+        </button>
+      </header>
+
+      <section class="week-strip" aria-label="Week selector">
+        <div class="week-tabs" id="weekTabs"></div>
+      </section>
+
+      <section class="filters" aria-label="Event filters">
+        <button class="filter-chip" type="button" data-filter="kid"><span class="chip-icon">👥</span>Kids</button>
+        <button class="filter-chip" type="button" data-filter="free"><span class="chip-icon">🏷</span>Free</button>
+        <button class="filter-chip" type="button" data-filter="active"><span class="chip-icon">🥾</span>Active</button>
+        <button class="filter-chip" type="button" data-filter="alcohol"><span class="chip-icon">🍴</span>Food & Drink</button>
+        <button class="filter-settings" type="button" aria-label="More filters">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16" />
+            <path d="M4 17h16" />
+            <circle cx="9" cy="7" r="2" />
+            <circle cx="15" cy="17" r="2" />
+          </svg>
+        </button>
+      </section>
+
+      <section class="event-list" id="eventList" aria-label="Events"></section>
+      <section class="map-view" id="mapView" hidden></section>
+
+      <nav class="bottom-nav" aria-label="Primary">
+        <button class="bottom-nav-button active" type="button" data-view="week">
+          <span class="nav-icon">▣</span>
+          <span>Week</span>
+        </button>
+        <button class="bottom-nav-button" type="button" data-view="filters">
+          <span class="nav-icon">☷</span>
+          <span>Filters</span>
+        </button>
+        <button class="bottom-nav-button" type="button" data-view="map">
+          <span class="nav-icon">◇</span>
+          <span>Map</span>
+        </button>
+      </nav>
+
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
