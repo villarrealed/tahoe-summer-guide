@@ -647,15 +647,20 @@ h1 {
   justify-self: start;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 0 14px;
-  color: var(--pine);
-  border: 1px solid #bdd4cf;
+  min-height: 44px;
+  padding: 0 18px;
+  color: #fff;
+  border: 1px solid #075d9f;
   border-radius: 999px;
-  background: #fff;
-  font-size: 0.9rem;
-  font-weight: 850;
+  background: linear-gradient(135deg, var(--lake), #075d9f);
+  box-shadow: 0 8px 18px rgba(9, 111, 190, 0.24);
+  font-size: 0.94rem;
+  font-weight: 900;
   cursor: pointer;
+}
+
+.share-event-button:hover {
+  background: linear-gradient(135deg, #0a7fd9, #075891);
 }
 
 .share-event-button:focus-visible {
