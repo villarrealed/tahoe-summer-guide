@@ -6,7 +6,6 @@ const state = {
   events: [],
   activeWeek: 0,
   filters: new Set(),
-  view: "week",
 };
 
 const weeks = [
@@ -36,6 +35,7 @@ const weeks = [
 const weekTabs = document.getElementById("weekTabs");
 const eventList = document.getElementById("eventList");
 const mapView = document.getElementById("mapView");
+const eventDetail = document.getElementById("eventDetail");
 const dateContext = document.getElementById("dateContext");
 
 function parseCsv(text) {
@@ -92,8 +92,9 @@ function eventDate(row) {
   return new Date(`${row.Date.replace(/^[^,]+, /, "")} 00:00:00`);
 }
 
-function normalizeEvent(row) {
+function normalizeEvent(row, id) {
   return {
+    id: String(id),
     date: eventDate(row),
     name: row["Event Name"],
     location: row.Location,
@@ -254,14 +255,61 @@ function renderMap(events) {
   `;
 }
 
+function eventRowTemplate(event) {
+  const icons = eventIcons(event)
+    .map(([icon, label]) => `<span class="meta-icon" title="${label}">${icon}</span>`)
+    .join("");
+
+  return `
+    <button class="event-row" type="button" data-event-id="${event.id}">
+      <time class="event-time">${splitTime(escapeHtml(event.time))}</time>
+      <span class="event-copy">
+        <span class="event-title">${escapeHtml(event.name)}</span>
+        <span class="event-location">
+          <span class="pin-icon">●</span>${escapeHtml(event.location)}
+        </span>
+        <span class="category-tag ${categoryTone(event.category)}">${escapeHtml(shortCategory(event.category))}</span>
+        <span class="fact-row" aria-label="Planning details">
+          ${icons}
+          <span class="sr-only">${escapeHtml(event.kid)}. ${escapeHtml(event.physical)}. ${escapeHtml(alcoholLabel(event.alcohol))}. ${escapeHtml(costLabel(event.cost))}.</span>
+        </span>
+      </span>
+      <span class="event-media" aria-hidden="true">
+        <img src="${imageForEvent(event)}" alt="" loading="lazy" />
+      </span>
+      <span class="row-arrow" aria-hidden="true">›</span>
+    </button>
+  `;
+}
+
+function renderEventGroups(events) {
+  const groups = groupByDay(events);
+  eventList.innerHTML = [...groups.entries()]
+    .map(([, dayEvents]) => {
+      const day = dayEvents[0].date;
+      return `
+        <section class="day-group">
+          <div class="day-heading">
+            <h2>${formatDay(day)}</h2>
+          </div>
+          <div class="day-card">
+            ${dayEvents.map(eventRowTemplate).join("")}
+          </div>
+        </section>
+      `;
+    })
+    .join("");
+}
+
 function renderEvents() {
   const events = weekEvents();
   const week = weeks[state.activeWeek];
 
   dateContext.textContent = `▣ ${week.range}, 2026`;
   renderMap(events);
-  eventList.hidden = state.view === "map";
-  mapView.hidden = state.view !== "map";
+  eventList.hidden = false;
+  mapView.hidden = true;
+  eventDetail.hidden = true;
 
   if (!events.length) {
     eventList.innerHTML = `
@@ -272,65 +320,40 @@ function renderEvents() {
     return;
   }
 
-  const groups = groupByDay(events);
-  eventList.innerHTML = [...groups.entries()]
-    .map(([, dayEvents]) => {
-      const day = dayEvents[0].date;
-      const rows = dayEvents
-        .map((event) => {
-          const icons = eventIcons(event)
-            .map(([icon, label]) => `<span class="meta-icon" title="${label}">${icon}</span>`)
-            .join("");
-          return `
-            <article class="event-row">
-              <time class="event-time">${splitTime(escapeHtml(event.time))}</time>
-              <div class="event-copy">
-                <h3 class="event-title">${escapeHtml(event.name)}</h3>
-                <p class="event-location">
-                  <span class="pin-icon">●</span>${escapeHtml(event.location)}
-                </p>
-                <span class="category-tag ${categoryTone(event.category)}">${escapeHtml(shortCategory(event.category))}</span>
-                <div class="fact-row" aria-label="Planning details">
-                  ${icons}
-                  <span class="sr-only">${escapeHtml(event.kid)}. ${escapeHtml(event.physical)}. ${escapeHtml(alcoholLabel(event.alcohol))}. ${escapeHtml(costLabel(event.cost))}.</span>
-                </div>
-              </div>
-              <a class="event-media" href="${event.link}" target="_blank" rel="noreferrer" aria-label="Open source details for ${escapeHtml(event.name)}">
-                <img src="${imageForEvent(event)}" alt="" loading="lazy" />
-              </a>
-              <a class="row-arrow" href="${event.link}" target="_blank" rel="noreferrer" aria-label="Open source details">›</a>
-            </article>
-          `;
-        })
-        .join("");
-
-      return `
-        <section class="day-group">
-          <div class="day-heading">
-            <h2>${formatDay(day)}</h2>
-          </div>
-          <div class="day-card">
-            ${rows}
-          </div>
-        </section>
-      `;
-    })
-    .join("");
+  renderEventGroups(events);
 }
 
-function setView(view) {
-  state.view = view;
-  document.querySelectorAll(".bottom-nav-button").forEach((button) => {
-    button.classList.toggle("active", button.dataset.view === view);
-  });
-  if (view === "filters") {
-    document.querySelector(".filters").scrollIntoView({ behavior: "smooth", block: "start" });
-    state.view = "week";
-    document.querySelector('[data-view="week"]').classList.add("active");
-    document.querySelector('[data-view="filters"]').classList.remove("active");
-    return;
-  }
-  renderEvents();
+function openEventDetail(eventId) {
+  const event = state.events.find((item) => item.id === eventId);
+  if (!event) return;
+
+  eventList.hidden = true;
+  mapView.hidden = true;
+  eventDetail.hidden = false;
+  eventDetail.innerHTML = `
+    <button class="back-button" type="button" data-back-to-events>← Back to events</button>
+    <article class="detail-card">
+      <div class="detail-hero">
+        <img src="${imageForEvent(event)}" alt="" />
+      </div>
+      <div class="detail-body">
+        <span class="category-tag ${categoryTone(event.category)}">${escapeHtml(shortCategory(event.category))}</span>
+        <h2 class="detail-title">${escapeHtml(event.name)}</h2>
+        <ul class="detail-meta">
+          <li><strong>Date</strong><span>${formatDay(event.date)}</span></li>
+          <li><strong>Time</strong><span>${escapeHtml(compactTime(event.time))}</span></li>
+          <li><strong>Place</strong><span>${escapeHtml(event.location)}</span></li>
+          <li><strong>Kids</strong><span>${escapeHtml(event.kid)}</span></li>
+          <li><strong>Activity</strong><span>${escapeHtml(event.physical)}</span></li>
+          <li><strong>Cost</strong><span>${escapeHtml(event.cost)}</span></li>
+          <li><strong>Drinks</strong><span>${escapeHtml(alcoholLabel(event.alcohol))}</span></li>
+        </ul>
+        <p class="detail-context">${escapeHtml(event.context)}</p>
+        <a class="source-button" href="${event.link}" target="_blank" rel="noreferrer">Open source details</a>
+      </div>
+    </article>
+  `;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function render() {
@@ -347,6 +370,17 @@ function bindControls() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
+  eventList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-event-id]");
+    if (!button) return;
+    openEventDetail(button.dataset.eventId);
+  });
+
+  eventDetail.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-back-to-events]")) return;
+    renderEvents();
+  });
+
   document.querySelectorAll(".filter-chip").forEach((button) => {
     button.addEventListener("click", () => {
       const filter = button.dataset.filter;
@@ -358,10 +392,6 @@ function bindControls() {
       button.classList.toggle("active", state.filters.has(filter));
       renderEvents();
     });
-  });
-
-  document.querySelectorAll(".bottom-nav-button").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.view));
   });
 
   document.querySelector(".filter-settings").addEventListener("click", () => {
@@ -378,50 +408,14 @@ function bindControls() {
       const haystack = `${event.name} ${event.location} ${event.category}`.toLowerCase();
       return event.date >= week.start && event.date <= week.end && haystack.includes(query.toLowerCase());
     });
-    state.view = "week";
     eventList.hidden = false;
     mapView.hidden = true;
+    eventDetail.hidden = true;
     if (!matches.length) {
       eventList.innerHTML = `<div class="empty-state">No matches for "${escapeHtml(query)}" this week.</div>`;
       return;
     }
-    const previousFilters = new Set(state.filters);
-    state.filters.clear();
-    eventList.innerHTML = "";
-    const groups = groupByDay(matches);
-    eventList.innerHTML = [...groups.entries()]
-      .map(([, dayEvents]) => {
-        const day = dayEvents[0].date;
-        return `
-          <section class="day-group">
-            <div class="day-heading"><h2>${formatDay(day)}</h2></div>
-            <div class="day-card">
-              ${dayEvents
-                .map((event) => {
-                  const icons = eventIcons(event)
-                    .map(([icon, label]) => `<span class="meta-icon" title="${label}">${icon}</span>`)
-                    .join("");
-                  return `
-                    <article class="event-row">
-                      <time class="event-time">${splitTime(escapeHtml(event.time))}</time>
-                      <div class="event-copy">
-                        <h3 class="event-title">${escapeHtml(event.name)}</h3>
-                        <p class="event-location"><span class="pin-icon">●</span>${escapeHtml(event.location)}</p>
-                        <span class="category-tag ${categoryTone(event.category)}">${escapeHtml(shortCategory(event.category))}</span>
-                        <div class="fact-row">${icons}</div>
-                      </div>
-                      <a class="event-media" href="${event.link}" target="_blank" rel="noreferrer"><img src="${imageForEvent(event)}" alt="" loading="lazy" /></a>
-                      <a class="row-arrow" href="${event.link}" target="_blank" rel="noreferrer" aria-label="Open source details">›</a>
-                    </article>
-                  `;
-                })
-                .join("")}
-            </div>
-          </section>
-        `;
-      })
-      .join("");
-    state.filters = previousFilters;
+    renderEventGroups(matches);
   });
 }
 

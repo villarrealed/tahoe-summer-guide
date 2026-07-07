@@ -40,10 +40,10 @@ a {
 }
 
 .app {
-  width: min(390px, 100%);
+  width: min(760px, 100%);
   min-height: 100vh;
-  margin: 0;
-  padding: 18px 20px 96px;
+  margin: 0 auto;
+  padding: 18px 20px 44px;
   overflow-x: hidden;
 }
 
@@ -218,10 +218,11 @@ h1 {
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   margin-bottom: 30px;
-  overflow-x: auto;
+  overflow: visible;
   scrollbar-width: none;
 }
 
@@ -298,17 +299,39 @@ h1 {
 }
 
 .event-row {
+  appearance: none;
   position: relative;
   display: grid;
   grid-template-columns: 92px minmax(0, 1fr) 108px 20px;
   gap: 14px;
   align-items: center;
+  width: 100%;
   min-height: 154px;
   padding: 18px 16px;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
 }
 
 .event-row + .event-row {
   border-top: 1px solid var(--line);
+}
+
+.event-row:hover,
+.event-row:focus-visible {
+  background: rgba(237, 247, 244, 0.66);
+}
+
+.event-row:focus-visible {
+  outline: 3px solid rgba(9, 111, 190, 0.28);
+  outline-offset: -3px;
+}
+
+.event-copy {
+  display: block;
+  min-width: 0;
 }
 
 .event-time {
@@ -331,6 +354,7 @@ h1 {
 }
 
 .event-title {
+  display: block;
   margin: 0 0 6px;
   color: var(--ink);
   font-size: 1.02rem;
@@ -491,55 +515,6 @@ h1 {
   font-weight: 750;
 }
 
-.bottom-nav {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 8;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  width: min(390px, 100%);
-  margin: 0;
-  padding: 10px 18px 14px;
-  border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(18px);
-}
-
-.bottom-nav-button {
-  position: relative;
-  display: grid;
-  place-items: center;
-  gap: 3px;
-  min-height: 50px;
-  color: #243c38;
-  border: 0;
-  background: transparent;
-  font-size: 0.8rem;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.bottom-nav-button.active {
-  color: var(--pine);
-}
-
-.bottom-nav-button.active::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  width: 36px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--pine);
-}
-
-.nav-icon {
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
 .empty-state {
   padding: 26px 18px;
   color: var(--muted);
@@ -547,6 +522,102 @@ h1 {
   border-radius: 13px;
   background: rgba(255, 255, 255, 0.78);
   text-align: center;
+}
+
+.event-detail {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.detail-hero {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #e5eeeb;
+}
+
+.detail-hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-body {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.back-button,
+.source-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.back-button {
+  justify-self: start;
+  color: var(--pine);
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+}
+
+.source-button {
+  color: #fff;
+  background: var(--pine);
+}
+
+.detail-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.55rem;
+  line-height: 1.08;
+  font-weight: 900;
+}
+
+.detail-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-meta li {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+  color: #253d38;
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+.detail-meta strong {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.detail-context {
+  margin: 0;
+  color: #344d48;
+  line-height: 1.5;
 }
 
 .sr-only {
@@ -615,14 +686,8 @@ h1 {
 }
 
 @media (min-width: 900px) {
-  .app,
-  .bottom-nav {
+  .app {
     width: min(960px, 100%);
-  }
-
-  .app,
-  .bottom-nav {
-    margin: 0 auto;
   }
 
   .event-list {
