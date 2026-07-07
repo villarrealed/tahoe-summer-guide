@@ -563,6 +563,7 @@ h1 {
 .event-detail {
   display: grid;
   gap: 14px;
+  scroll-margin-top: 12px;
 }
 
 .detail-card {

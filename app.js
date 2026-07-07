@@ -436,7 +436,9 @@ function openEventDetail(eventId) {
       </div>
     </article>
   `;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  requestAnimationFrame(() => {
+    eventDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 function setDistanceStatus(message) {
