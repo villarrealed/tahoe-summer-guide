@@ -207,31 +207,24 @@ h1 {
 }
 
 .filters {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  align-items: center;
+  align-items: stretch;
   max-width: 100%;
   margin-bottom: 30px;
-  margin-right: -14px;
-  padding: 0 14px 4px 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-}
-
-.filters::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 
 .filter-chip {
   display: inline-flex;
-  flex: 0 0 auto;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   min-height: 46px;
-  padding: 0 17px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 12px;
   color: #1c312e;
   border: 1px solid #dde5e2;
   border-radius: 999px;
@@ -256,15 +249,24 @@ h1 {
 
 .filter-settings {
   display: inline-flex;
-  flex: 0 0 auto;
+  grid-column: 1 / -1;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  gap: 8px;
+  min-height: 40px;
+  width: 100%;
   color: var(--pine);
-  border: 0;
-  background: transparent;
+  border: 1px solid #d6e1de;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 0.84rem;
+  font-weight: 800;
   cursor: pointer;
+}
+
+.filter-settings svg {
+  width: 20px;
+  height: 20px;
 }
 
 .event-list {
