@@ -642,6 +642,40 @@ h1 {
   background: var(--pine);
 }
 
+.copy-link-button {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--pine);
+  border: 1px solid #bdd4cf;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.9rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.copy-link-button:focus-visible {
+  outline: 3px solid rgba(9, 111, 190, 0.28);
+  outline-offset: 2px;
+}
+
+.copy-status {
+  min-height: 18px;
+  margin: -6px 0 0;
+  color: var(--lake);
+  font-size: 0.82rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.copy-status:empty {
+  display: none;
+}
+
 .distance-button {
   display: inline-flex;
   align-items: center;

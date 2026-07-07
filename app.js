@@ -120,10 +120,19 @@ function eventDate(row) {
   return new Date(`${row.Date.replace(/^[^,]+, /, "")} 00:00:00`);
 }
 
+function slugify(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 function normalizeEvent(row, id) {
+  const date = eventDate(row);
   return {
-    id: String(id),
-    date: eventDate(row),
+    id: `${date.toISOString().slice(0, 10)}-${slugify(row["Event Name"])}`,
+    date,
     name: row["Event Name"],
     location: row.Location,
     time: row.Time,
@@ -172,6 +181,23 @@ function mapUrlForEvent(event) {
   return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
 }
 
+function eventUrl(eventId) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("event", eventId);
+  url.hash = "";
+  return url.toString();
+}
+
+function setEventUrl(eventId) {
+  window.history.replaceState(null, "", eventUrl(eventId));
+}
+
+function clearEventUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("event");
+  window.history.replaceState(null, "", url.toString());
+}
+
 function coordinatesForEvent(event) {
   const match = venueCoordinates.find(([pattern]) => pattern.test(event.location));
   if (!match) return null;
@@ -217,6 +243,11 @@ function weekEvents() {
   return state.events.filter((event) => {
     return event.date >= week.start && event.date <= week.end && event.date >= TODAY && passesFilters(event);
   });
+}
+
+function weekIndexForEvent(event) {
+  const index = weeks.findIndex((week) => event.date >= week.start && event.date <= week.end);
+  return index === -1 ? state.activeWeek : index;
 }
 
 function groupByDay(events) {
@@ -395,10 +426,11 @@ function renderEvents() {
   renderEventGroups(events);
 }
 
-function openEventDetail(eventId) {
+function openEventDetail(eventId, options = {}) {
   const event = state.events.find((item) => item.id === eventId);
   if (!event) return;
 
+  if (options.updateUrl !== false) setEventUrl(eventId);
   eventList.hidden = true;
   mapView.hidden = true;
   eventDetail.hidden = false;
@@ -413,6 +445,10 @@ function openEventDetail(eventId) {
         ${reservation ? `<div class="reservation-callout">Reserved plan</div>` : ""}
         <span class="category-tag ${categoryTone(event.category)}">${escapeHtml(shortCategory(event.category))}</span>
         <h2 class="detail-title">${escapeHtml(event.name)}</h2>
+        <button class="copy-link-button" type="button" data-copy-event-link="${event.id}">
+          <span>Copy link</span>
+        </button>
+        <p class="copy-status" data-copy-status aria-live="polite"></p>
         <ul class="detail-meta">
           <li><strong>Date</strong><span>${formatDay(event.date)}</span></li>
           <li><strong>Time</strong><span>${escapeHtml(compactTime(event.time))}</span></li>
@@ -436,9 +472,45 @@ function openEventDetail(eventId) {
       </div>
     </article>
   `;
+  if (options.scroll !== false) {
+    requestAnimationFrame(() => {
+      eventDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+}
+
+async function copyEventLink(eventId) {
+  const status = eventDetail.querySelector("[data-copy-status]");
+  const link = eventUrl(eventId);
+
+  try {
+    await navigator.clipboard.writeText(link);
+    if (status) status.textContent = "Link copied";
+  } catch {
+    const input = document.createElement("textarea");
+    input.value = link;
+    input.setAttribute("readonly", "");
+    input.style.position = "fixed";
+    input.style.top = "-999px";
+    document.body.append(input);
+    input.select();
+    const copied = document.execCommand("copy");
+    input.remove();
+    if (status) status.textContent = copied ? "Link copied" : `Copy blocked. Press and hold: ${link}`;
+  }
+}
+
+function openLinkedEvent() {
+  const eventId = new URLSearchParams(window.location.search).get("event");
+  const linkedEvent = state.events.find((event) => event.id === eventId);
+  if (!linkedEvent) return false;
+  state.activeWeek = weekIndexForEvent(linkedEvent);
+  renderWeeks();
+  openEventDetail(eventId, { updateUrl: false, scroll: false });
   requestAnimationFrame(() => {
-    eventDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+    eventDetail.scrollIntoView({ block: "start" });
   });
+  return true;
 }
 
 function setDistanceStatus(message) {
@@ -481,6 +553,7 @@ function bindControls() {
     const button = event.target.closest("[data-week]");
     if (!button) return;
     state.activeWeek = Number(button.dataset.week);
+    clearEventUrl();
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
@@ -492,6 +565,12 @@ function bindControls() {
   });
 
   eventDetail.addEventListener("click", (event) => {
+    const copyButton = event.target.closest("[data-copy-event-link]");
+    if (copyButton) {
+      copyEventLink(copyButton.dataset.copyEventLink);
+      return;
+    }
+
     const distanceButton = event.target.closest("[data-use-location]");
     if (distanceButton) {
       useLocationForDistance(distanceButton.dataset.useLocation);
@@ -499,6 +578,7 @@ function bindControls() {
     }
 
     if (!event.target.closest("[data-back-to-events]")) return;
+    clearEventUrl();
     renderEvents();
   });
 
@@ -511,6 +591,7 @@ function bindControls() {
         state.filters.add(filter);
       }
       button.classList.toggle("active", state.filters.has(filter));
+      clearEventUrl();
       renderEvents();
     });
   });
@@ -518,6 +599,7 @@ function bindControls() {
   document.querySelector(".filter-settings").addEventListener("click", () => {
     state.filters.clear();
     document.querySelectorAll(".filter-chip").forEach((button) => button.classList.remove("active"));
+    clearEventUrl();
     renderEvents();
   });
 
@@ -534,6 +616,7 @@ async function init() {
 
     bindControls();
     render();
+    openLinkedEvent();
   } catch (error) {
     eventList.innerHTML = `
       <div class="empty-state">
