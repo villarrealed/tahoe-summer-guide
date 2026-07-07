@@ -26,6 +26,7 @@ const venueCoordinates = [
   [/palisades|aerial tram|high camp|village at palisades/i, 39.1969, -120.2357],
   [/pizza on the hill|lodge pavilion at tahoe donner/i, 39.3538, -120.2422],
   [/private residence, incline village|various venues, incline village/i, 39.2497, -119.9521],
+  [/savoie/i, 39.1697, -120.1468],
   [/sugar pine point state park/i, 39.0493, -120.1154],
   [/tahoe national brewing/i, 39.3258, -120.1834],
   [/tahoe vista recreation area/i, 39.2428, -120.0519],
