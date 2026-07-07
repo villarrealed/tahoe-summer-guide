@@ -642,7 +642,7 @@ h1 {
   background: var(--pine);
 }
 
-.copy-link-button {
+.share-event-button {
   display: inline-flex;
   justify-self: start;
   align-items: center;
@@ -658,12 +658,12 @@ h1 {
   cursor: pointer;
 }
 
-.copy-link-button:focus-visible {
+.share-event-button:focus-visible {
   outline: 3px solid rgba(9, 111, 190, 0.28);
   outline-offset: 2px;
 }
 
-.copy-status {
+.share-status {
   min-height: 18px;
   margin: -6px 0 0;
   color: var(--lake);
@@ -672,7 +672,7 @@ h1 {
   overflow-wrap: anywhere;
 }
 
-.copy-status:empty {
+.share-status:empty {
   display: none;
 }
 

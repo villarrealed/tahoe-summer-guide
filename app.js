@@ -445,10 +445,10 @@ function openEventDetail(eventId, options = {}) {
         ${reservation ? `<div class="reservation-callout">Reserved plan</div>` : ""}
         <span class="category-tag ${categoryTone(event.category)}">${escapeHtml(shortCategory(event.category))}</span>
         <h2 class="detail-title">${escapeHtml(event.name)}</h2>
-        <button class="copy-link-button" type="button" data-copy-event-link="${event.id}">
-          <span>Copy link</span>
+        <button class="share-event-button" type="button" data-share-event="${event.id}">
+          <span>Share event</span>
         </button>
-        <p class="copy-status" data-copy-status aria-live="polite"></p>
+        <p class="share-status" data-share-status aria-live="polite"></p>
         <ul class="detail-meta">
           <li><strong>Date</strong><span>${formatDay(event.date)}</span></li>
           <li><strong>Time</strong><span>${escapeHtml(compactTime(event.time))}</span></li>
@@ -479,24 +479,30 @@ function openEventDetail(eventId, options = {}) {
   }
 }
 
-async function copyEventLink(eventId) {
-  const status = eventDetail.querySelector("[data-copy-status]");
+async function shareEvent(eventId) {
+  const event = state.events.find((item) => item.id === eventId);
+  const status = eventDetail.querySelector("[data-share-status]");
+  if (!event) return;
+
   const link = eventUrl(eventId);
+  const shareData = {
+    title: event.name,
+    text: `${event.name} | ${formatDay(event.date)} at ${compactTime(event.time)} | ${event.location}`,
+    url: link,
+  };
+
+  if (!navigator.share) {
+    if (status) status.textContent = `Sharing unavailable. Link: ${link}`;
+    return;
+  }
 
   try {
-    await navigator.clipboard.writeText(link);
-    if (status) status.textContent = "Link copied";
-  } catch {
-    const input = document.createElement("textarea");
-    input.value = link;
-    input.setAttribute("readonly", "");
-    input.style.position = "fixed";
-    input.style.top = "-999px";
-    document.body.append(input);
-    input.select();
-    const copied = document.execCommand("copy");
-    input.remove();
-    if (status) status.textContent = copied ? "Link copied" : `Copy blocked. Press and hold: ${link}`;
+    await navigator.share(shareData);
+    if (status) status.textContent = "Ready to share";
+  } catch (error) {
+    if (error.name !== "AbortError" && status) {
+      status.textContent = `Sharing unavailable. Link: ${link}`;
+    }
   }
 }
 
@@ -565,9 +571,9 @@ function bindControls() {
   });
 
   eventDetail.addEventListener("click", (event) => {
-    const copyButton = event.target.closest("[data-copy-event-link]");
-    if (copyButton) {
-      copyEventLink(copyButton.dataset.copyEventLink);
+    const shareButton = event.target.closest("[data-share-event]");
+    if (shareButton) {
+      shareEvent(shareButton.dataset.shareEvent);
       return;
     }
 
