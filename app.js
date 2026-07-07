@@ -258,6 +258,10 @@ function categoryTone(category) {
   return "culture";
 }
 
+function isReservation(event) {
+  return /reservation/i.test(`${event.name} ${event.category} ${event.cost} ${event.context}`);
+}
+
 function imageForEvent(event) {
   const text = `${event.name} ${event.category} ${event.physical} ${event.alcohol}`.toLowerCase();
   if (/kayak|swim|water|beach|paddl/.test(text)) return "assets/events/kayak.png";
@@ -324,11 +328,14 @@ function eventRowTemplate(event) {
   const icons = eventIcons(event)
     .map(([icon, label]) => `<span class="meta-icon" title="${label}">${icon}</span>`)
     .join("");
+  const reservation = isReservation(event);
+  const reservationBadge = reservation ? `<span class="reservation-badge">Reservation</span>` : "";
 
   return `
-    <button class="event-row" type="button" data-event-id="${event.id}">
+    <button class="event-row${reservation ? " reservation-event" : ""}" type="button" data-event-id="${event.id}">
       <time class="event-time">${splitTime(escapeHtml(event.time))}</time>
       <span class="event-copy">
+        ${reservationBadge}
         <span class="event-title">${escapeHtml(event.name)}</span>
         <span class="event-location">
           <span class="pin-icon">●</span>${escapeHtml(event.location)}
@@ -395,13 +402,15 @@ function openEventDetail(eventId) {
   eventList.hidden = true;
   mapView.hidden = true;
   eventDetail.hidden = false;
+  const reservation = isReservation(event);
   eventDetail.innerHTML = `
     <button class="back-button" type="button" data-back-to-events>← Back to events</button>
-    <article class="detail-card">
+    <article class="detail-card${reservation ? " reservation-detail" : ""}">
       <div class="detail-hero">
         <img src="${imageForEvent(event)}" alt="" />
       </div>
       <div class="detail-body">
+        ${reservation ? `<div class="reservation-callout">Reserved plan</div>` : ""}
         <span class="category-tag ${categoryTone(event.category)}">${escapeHtml(shortCategory(event.category))}</span>
         <h2 class="detail-title">${escapeHtml(event.name)}</h2>
         <ul class="detail-meta">

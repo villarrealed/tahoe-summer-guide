@@ -320,6 +320,28 @@ h1 {
   background: rgba(237, 247, 244, 0.66);
 }
 
+.event-row.reservation-event {
+  background:
+    linear-gradient(90deg, rgba(184, 121, 25, 0.18), transparent 32%),
+    rgba(255, 250, 240, 0.9);
+}
+
+.event-row.reservation-event::before {
+  content: "";
+  position: absolute;
+  inset: 14px auto 14px 0;
+  width: 5px;
+  border-radius: 0 999px 999px 0;
+  background: var(--gold);
+}
+
+.event-row.reservation-event:hover,
+.event-row.reservation-event:focus-visible {
+  background:
+    linear-gradient(90deg, rgba(184, 121, 25, 0.24), transparent 34%),
+    #fff8e9;
+}
+
 .event-row:focus-visible {
   outline: 3px solid rgba(9, 111, 190, 0.28);
   outline-offset: -3px;
@@ -357,6 +379,22 @@ h1 {
   line-height: 1.14;
   font-weight: 900;
   overflow-wrap: anywhere;
+}
+
+.reservation-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  margin: 0 0 7px;
+  padding: 0 9px;
+  color: #7a4a05;
+  border: 1px solid rgba(184, 121, 25, 0.2);
+  border-radius: 999px;
+  background: #fff1d5;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .event-location {
@@ -533,6 +571,13 @@ h1 {
   overflow: hidden;
 }
 
+.detail-card.reservation-detail {
+  border-color: rgba(184, 121, 25, 0.32);
+  background:
+    linear-gradient(180deg, #fffbf3, rgba(255, 255, 255, 0.95) 34%),
+    #fff;
+}
+
 .detail-hero {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -550,6 +595,22 @@ h1 {
   display: grid;
   gap: 12px;
   padding: 18px;
+}
+
+.reservation-callout {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  color: #7a4a05;
+  border: 1px solid rgba(184, 121, 25, 0.22);
+  border-radius: 999px;
+  background: #fff1d5;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .back-button,
