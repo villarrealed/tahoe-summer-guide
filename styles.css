@@ -40,10 +40,11 @@ a {
 }
 
 .app {
-  width: min(760px, 100%);
+  width: 100%;
+  max-width: 430px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 18px 20px 44px;
+  padding: 18px 14px 44px;
   overflow-x: hidden;
 }
 
@@ -634,8 +635,8 @@ h1 {
 
 @media (max-width: 560px) {
   .app {
-    padding-right: 14px;
-    padding-left: 14px;
+    max-width: none;
+    margin: 0;
   }
 
   .topbar {
@@ -682,16 +683,5 @@ h1 {
 
   .row-arrow {
     font-size: 1.8rem;
-  }
-}
-
-@media (min-width: 900px) {
-  .app {
-    width: min(960px, 100%);
-  }
-
-  .event-list {
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
   }
 }
