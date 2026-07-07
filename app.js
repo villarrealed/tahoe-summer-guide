@@ -6,7 +6,34 @@ const state = {
   events: [],
   activeWeek: 0,
   filters: new Set(),
+  userLocation: null,
 };
+
+const venueCoordinates = [
+  [/alibi ale works|alibi amphitheater/i, 39.2497, -119.9521],
+  [/boatworks|tahoe wine collective/i, 39.1709, -120.1426],
+  [/commons beach|tahoe gal|various venues, tahoe city/i, 39.1678, -120.1427],
+  [/crystal bay club/i, 39.2274, -120.0057],
+  [/donner memorial state park/i, 39.3256, -120.2328],
+  [/donner summit/i, 39.3166, -120.3269],
+  [/emerald bay state park/i, 38.9546, -120.1108],
+  [/highlands community center/i, 39.1863, -120.1249],
+  [/historic downtown truckee/i, 39.3278, -120.1833],
+  [/kings beach state recreation area/i, 39.2374, -120.0262],
+  [/north tahoe hebrew congregation/i, 39.2503, -119.9517],
+  [/north tahoe regional park/i, 39.2414, -120.0509],
+  [/northstar california/i, 39.2746, -120.1202],
+  [/palisades|aerial tram|high camp|village at palisades/i, 39.1969, -120.2357],
+  [/pizza on the hill|lodge pavilion at tahoe donner/i, 39.3538, -120.2422],
+  [/private residence, incline village|various venues, incline village/i, 39.2497, -119.9521],
+  [/sugar pine point state park/i, 39.0493, -120.1154],
+  [/tahoe national brewing/i, 39.3258, -120.1834],
+  [/tahoe vista recreation area/i, 39.2428, -120.0519],
+  [/truckee regional park/i, 39.3269, -120.1687],
+  [/university of nevada reno at lake tahoe/i, 39.2469, -119.9399],
+  [/west end beach/i, 39.3182, -120.2829],
+  [/william b\. layton park/i, 39.1719, -120.1394],
+];
 
 const weeks = [
   {
@@ -137,6 +164,43 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function mapUrlForEvent(event) {
+  const query = `${event.location}, Lake Tahoe, CA`;
+  return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+}
+
+function coordinatesForEvent(event) {
+  const match = venueCoordinates.find(([pattern]) => pattern.test(event.location));
+  if (!match) return null;
+  return { latitude: match[1], longitude: match[2] };
+}
+
+function milesBetween(start, end) {
+  const earthRadiusMiles = 3958.8;
+  const toRadians = (degrees) => (degrees * Math.PI) / 180;
+  const lat1 = toRadians(start.latitude);
+  const lat2 = toRadians(end.latitude);
+  const deltaLat = toRadians(end.latitude - start.latitude);
+  const deltaLon = toRadians(end.longitude - start.longitude);
+  const haversine =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+
+  return 2 * earthRadiusMiles * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function distanceTextForEvent(event) {
+  const eventCoordinates = coordinatesForEvent(event);
+  if (!eventCoordinates) return "Venue distance unavailable";
+  if (!state.userLocation) {
+    return `<button class="distance-button" type="button" data-use-location="${event.id}">Use my location</button>`;
+  }
+
+  const miles = milesBetween(state.userLocation, eventCoordinates);
+  const rounded = miles < 10 ? miles.toFixed(1) : Math.round(miles).toString();
+  return `About ${rounded} mi away`;
 }
 
 function passesFilters(event) {
@@ -347,13 +411,52 @@ function openEventDetail(eventId) {
           <li><strong>Activity</strong><span>${escapeHtml(event.physical)}</span></li>
           <li><strong>Cost</strong><span>${escapeHtml(event.cost)}</span></li>
           <li><strong>Drinks</strong><span>${escapeHtml(alcoholLabel(event.alcohol))}</span></li>
+          <li><strong>Distance</strong><span class="distance-value" data-distance-value>${distanceTextForEvent(event)}</span></li>
         </ul>
         <p class="detail-context">${escapeHtml(event.context)}</p>
-        <a class="source-button" href="${event.link}" target="_blank" rel="noreferrer">Open source details</a>
+        <div class="detail-map" aria-label="Map for ${escapeHtml(event.location)}">
+          <iframe
+            title="Map for ${escapeHtml(event.name)}"
+            src="${mapUrlForEvent(event)}"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+        <a class="source-button" href="${event.link}" target="_blank" rel="noreferrer">Open website</a>
       </div>
     </article>
   `;
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function setDistanceStatus(message) {
+  const distanceValue = eventDetail.querySelector("[data-distance-value]");
+  if (distanceValue) distanceValue.textContent = message;
+}
+
+function useLocationForDistance(eventId) {
+  const event = state.events.find((item) => item.id === eventId);
+  if (!event) return;
+
+  if (!("geolocation" in navigator)) {
+    setDistanceStatus("Location is not available on this device");
+    return;
+  }
+
+  setDistanceStatus("Checking your location...");
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      state.userLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      };
+      setDistanceStatus(distanceTextForEvent(event));
+    },
+    () => {
+      setDistanceStatus("Location permission needed");
+    },
+    { enableHighAccuracy: false, maximumAge: 300000, timeout: 10000 },
+  );
 }
 
 function render() {
@@ -377,6 +480,12 @@ function bindControls() {
   });
 
   eventDetail.addEventListener("click", (event) => {
+    const distanceButton = event.target.closest("[data-use-location]");
+    if (distanceButton) {
+      useLocationForDistance(distanceButton.dataset.useLocation);
+      return;
+    }
+
     if (!event.target.closest("[data-back-to-events]")) return;
     renderEvents();
   });
@@ -400,23 +509,6 @@ function bindControls() {
     renderEvents();
   });
 
-  document.querySelector(".search-button").addEventListener("click", () => {
-    const query = window.prompt("Search this week");
-    if (!query) return;
-    const week = weeks[state.activeWeek];
-    const matches = state.events.filter((event) => {
-      const haystack = `${event.name} ${event.location} ${event.category}`.toLowerCase();
-      return event.date >= week.start && event.date <= week.end && haystack.includes(query.toLowerCase());
-    });
-    eventList.hidden = false;
-    mapView.hidden = true;
-    eventDetail.hidden = true;
-    if (!matches.length) {
-      eventList.innerHTML = `<div class="empty-state">No matches for "${escapeHtml(query)}" this week.</div>`;
-      return;
-    }
-    renderEventGroups(matches);
-  });
 }
 
 async function init() {

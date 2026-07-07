@@ -54,7 +54,7 @@ a {
 
 .topbar {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 58px;
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 14px;
   align-items: start;
   padding: 24px 0 20px;
@@ -124,21 +124,6 @@ h1 {
   font-weight: 850;
 }
 
-.search-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  color: var(--pine);
-  border: 1px solid #c9d9d4;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 8px 20px rgba(18, 68, 60, 0.08);
-  cursor: pointer;
-}
-
-.search-button svg,
 .filter-settings svg {
   width: 27px;
   height: 27px;
@@ -223,11 +208,16 @@ h1 {
 
 .filters {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
   align-items: center;
+  max-width: 100%;
   margin-bottom: 30px;
-  overflow: visible;
+  margin-right: -14px;
+  padding: 0 14px 4px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
 
@@ -249,6 +239,7 @@ h1 {
   box-shadow: 0 6px 16px rgba(18, 63, 57, 0.08);
   font-size: 0.94rem;
   font-weight: 750;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -587,6 +578,25 @@ h1 {
   background: var(--pine);
 }
 
+.distance-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  color: var(--pine);
+  border: 1px solid #bdd4cf;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.84rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.distance-button:focus-visible {
+  outline: 3px solid rgba(9, 111, 190, 0.28);
+  outline-offset: 2px;
+}
+
 .detail-title {
   margin: 0;
   color: var(--ink);
@@ -625,6 +635,22 @@ h1 {
   line-height: 1.5;
 }
 
+.detail-map {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #e5eeeb;
+  overflow: hidden;
+}
+
+.detail-map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -644,18 +670,13 @@ h1 {
   }
 
   .topbar {
-    grid-template-columns: 42px minmax(0, 1fr) 52px;
+    grid-template-columns: 42px minmax(0, 1fr);
     gap: 11px;
   }
 
   .brand-mark svg {
     width: 40px;
     height: 40px;
-  }
-
-  .search-button {
-    width: 50px;
-    height: 50px;
   }
 
   .week-strip {
